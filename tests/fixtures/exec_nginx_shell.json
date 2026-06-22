@@ -1,0 +1,14 @@
+{
+  "timestamp_ns": 1710000000000000000,
+  "event_type": "exec",
+  "pid": 2001,
+  "ppid": 944,
+  "uid": 33,
+  "gid": 33,
+  "comm": "bash",
+  "parent_comm": "nginx",
+  "exe_path": "/usr/bin/bash",
+  "path": "",
+  "mode": 0,
+  "flags": 0
+}

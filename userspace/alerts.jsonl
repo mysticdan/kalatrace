@@ -1,0 +1,1 @@
+{"timestamp_ns":1710000000000000000,"rule_id":"EXEC_SHELL_BY_SERVER_PROCESS","severity":"high","message":"Shell process spawned by server process","event_type":1,"pid":2001,"ppid":944,"uid":33,"gid":33,"comm":"bash","parent_comm":"nginx","exe_path":"/usr/bin/bash","path":""}
