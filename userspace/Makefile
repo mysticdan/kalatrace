@@ -8,8 +8,6 @@ LDLIBS = -lcjson
 
 SRCS = \
 	cli/kalatracectl.c \
-	rules/matcher.c \
- 	output/jsonl_writer.c
 
 OBJS = $(SRCS:.c=.o)
 

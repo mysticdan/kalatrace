@@ -2,7 +2,7 @@
 #include <errno.h>
 #include <string.h>
 
-#include "../include/jsonl.h"
+#include "jsonl.h"
 
 int kalatrace_write_alert_jsonl(
 	const char *path,

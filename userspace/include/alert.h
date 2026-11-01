@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+#include "event.h"
+
 #define KALATRACE_RULE_ID_LEN 64
 #define KALATRACE_SEVERITY_LEN 16
 #define KALATRACE_ALERT_MSG_LEN 256
@@ -25,5 +27,7 @@ struct kalatrace_alert {
 	char path[256];
 	char exe_path[256];
 };
+
+int kalatrace_create_alert_from_event(struct kalatrace_event *event, struct kalatrace_alert *alert);
 
 #endif
