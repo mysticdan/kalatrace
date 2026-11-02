@@ -124,43 +124,50 @@ static int parse_json_to_event(const cJSON *json, struct kalatrace_event *event)
 
 int kalatrace_parse_file_to_event(const char *path, struct kalatrace_event *event)
 {
-	FILE *fp;
-	char buffer[1024];
-	size_t read_size;
+    char buffer[1024];
+    size_t read_size;
+    cJSON *json;
+    FILE *fp;
+    int too_long = 0;
+    int read_error;
+    int close_error;
+    int result;
 
-	if (!path || !event)
-		return -1;
+    if (!path || !event)
+        return -1;
 
-	fp = fopen(path, "r");
-	if (!fp) {
-		perror("failed to open file");
-		return -1;
-	}
-
-	read_size = fread(buffer, 1, sizeof(buffer) - 1, fp);
-	if (read_size <= 0) {
-		fprintf(stderr, "failed to read from %s\n", path);
-		fclose(fp);
-		return -1;
-	}
-	buffer[read_size] = '\0';
-
-	cJSON *json = cJSON_Parse(buffer);
-	if (!json) {
-		fprintf(stderr, "failed to parse JSON from %s\n", path);
-		fclose(fp);
-		return -1;
-	}
-
-    if (parse_json_to_event(json, event) != 0) {
-        fprintf(stderr, "failed to parse event from JSON in %s\n", path);
-        cJSON_Delete(json);
-        fclose(fp);
+    fp = fopen(path, "rb");
+    if (!fp) {
+        perror("failed to open file");
         return -1;
     }
 
-	cJSON_Delete(json);
-	fclose(fp);
+    read_size = fread(buffer, 1, sizeof(buffer) - 1, fp);
+    read_error = ferror(fp);
+    if (!read_error && read_size == sizeof(buffer) - 1) {
+        /* Reject unread bytes instead of parsing a truncated prefix. */
+        too_long = fgetc(fp) != EOF;
+        read_error = ferror(fp);
+    }
+    close_error = fclose(fp);
 
-	return 0;
+    if (read_size == 0 || read_error || too_long || close_error == EOF ||
+        memchr(buffer, '\0', read_size) != NULL) {
+        fprintf(stderr, "failed to read complete JSON input from %s\n", path);
+        return -1;
+    }
+    buffer[read_size] = '\0';
+
+    /* Reject all non-whitespace after the single JSON document. */
+    json = cJSON_ParseWithLengthOpts(buffer, read_size + 1, NULL, 1);
+    if (!json) {
+        fprintf(stderr, "failed to parse JSON from %s\n", path);
+        return -1;
+    }
+
+    result = parse_json_to_event(json, event);
+    if (result != 0)
+        fprintf(stderr, "failed to parse event from JSON in %s\n", path);
+    cJSON_Delete(json);
+    return result;
 }

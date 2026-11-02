@@ -51,6 +51,9 @@ int main(int argc, char *argv[])
 
         printf("Alert generated and written to alerts.jsonl\n");
 
+    } else {
+        fprintf(stderr, "Unknown command: %s\n", argv[1]);
+        return 1;
     }
 
     return 0;
