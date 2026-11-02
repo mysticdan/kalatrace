@@ -5,6 +5,3 @@
 *.so
 /userspace/build/
 /userspace/kalatracectl
-
-# Runtime-generated local output
-/userspace/alerts.jsonl

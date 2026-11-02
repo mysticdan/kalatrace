@@ -41,3 +41,4 @@ struct kalatrace_event {
 };
 
 #endif
+

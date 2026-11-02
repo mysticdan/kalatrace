@@ -1,0 +1,2 @@
+{"timestamp_ns":1793554536415932673,"rule_id":"EXEC_SHELL_BY_SERVER_PROCESS","severity":"high","message":"Shell process spawned by server process","event_type":1,"pid":2001,"ppid":944,"uid":33,"gid":33,"comm":"sh","parent_comm":"apache2","exe_path":"/usr/bin/bash","path":""}
+{"timestamp_ns":1793554536415932700,"rule_id":"EXEC_SHELL_BY_SERVER_PROCESS","severity":"high","message":"Shell process spawned by server process","event_type":1,"pid":2001,"ppid":944,"uid":33,"gid":33,"comm":"sh","parent_comm":"httpd","exe_path":"/usr/bin/bash","path":""}

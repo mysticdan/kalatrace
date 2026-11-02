@@ -6,3 +6,4 @@
 int kalatrace_parse_file_to_event(const char *path, struct kalatrace_event *event);
 
 #endif
+
