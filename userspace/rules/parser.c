@@ -92,11 +92,6 @@ static int parse_json_to_event(const cJSON *json, struct kalatrace_event *event)
 
     struct kalatrace_event tmp = {0};
 
-    const char *type = json_get_string(json, "event_type");
-
-    if (!type)
-        return -1;
-
     if (!json_get_u64_string(json, "timestamp_ns", &tmp.timestamp_ns) ||
         !json_get_u32(json, "type", &tmp.type) ||
         !json_get_u32(json, "pid", &tmp.pid) ||
@@ -112,11 +107,13 @@ static int parse_json_to_event(const cJSON *json, struct kalatrace_event *event)
         return -1;
     }
 
-    tmp.type = event_type_string_to_enum(type);
+    int parsed_type = event_type_string_to_enum(tmp.type);
 
-    if (tmp.type < 0) {
+    if (parsed_type < 0) {
         return -1;
     }
+
+    tmp.type = (uint32_t)parsed_type;
 
     *event = tmp;
     return 0;
