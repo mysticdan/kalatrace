@@ -101,7 +101,11 @@ int main()
         storage = NULL;
         return rc;
     }
-    test_valid_connection(storage);
+    if (test_valid_connection(storage) != 0) {
+        free(storage);
+        storage = NULL;
+        return 1;
+    }
 
     // Test 3: Close a close storage connection
     if (test_double_close(storage) != 0) {
