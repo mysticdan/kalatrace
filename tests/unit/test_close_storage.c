@@ -9,7 +9,7 @@ int test_null_storage(struct kalatrace_storage *storage)
     } 
     
     printf("\033[1;31mtest_null_storage: Failed (expected SQLITE_MISUSE, got %d)\033[0m\n", rc);
-    return rc;
+    return 1;
 }
 
 int test_valid_connection(struct kalatrace_storage *storage) 
@@ -33,7 +33,7 @@ int test_double_close(struct kalatrace_storage *storage)
     }
 
     printf("\033[1;31mtest_double_close: Failed (expected SQLITE_MISUSE, got %d)\033[0m\n", rc);
-    return rc;
+    return 1;
 }
 
 int test_busy_connection_close(struct kalatrace_storage *storage) 
@@ -71,7 +71,7 @@ int test_busy_connection_close(struct kalatrace_storage *storage)
     
     printf("\033[1;31mtest_busy_connection_close: Failed (expected SQLITE_BUSY, got %d)\033[0m\n", rc);
     sqlite3_finalize(stmt);
-    return rc;
+    return 1;
 }
 
 int main() 
