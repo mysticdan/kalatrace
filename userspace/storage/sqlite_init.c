@@ -40,6 +40,7 @@ static int enable_wal(sqlite3 *db)
     rc = sqlite3_step(stmt);
     if (rc != SQLITE_ROW) {
         fprintf(stderr, "Failed to set WAL mode: %s\n", sqlite3_errmsg(db));
+        sqlite3_finalize(stmt);
         return rc;
     }
 
@@ -133,6 +134,11 @@ static int create_schema(sqlite3 *db)
 }
 
 int storage_init(struct kalatrace_storage *storage, const char *db_path) {
+    if (storage == NULL) {
+        fprintf(stderr, "Storage pointer is NULL\n");
+        return SQLITE_MISUSE;
+    }
+    
     if (db_path == NULL) {
         fprintf(stderr, "Database path is NULL\n");
         return SQLITE_ERROR;
