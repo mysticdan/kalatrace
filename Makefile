@@ -11,6 +11,8 @@ release debug asan ubsan:
 test:
 	$(MAKE) -C userspace BUILD=debug all
 	KALATRACE_CLI=$(CURDIR)/userspace/build/debug/kalatracectl python3 -m unittest discover -s tests -p 'test_*.py' -v
+	$(MAKE) -C tests/unit all
 
 clean:
 	$(MAKE) -C userspace clean
+	$(MAKE) -C tests/unit clean

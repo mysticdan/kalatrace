@@ -5,3 +5,4 @@
 *.so
 /userspace/build/
 /userspace/kalatracectl
+*/__pycache__/*

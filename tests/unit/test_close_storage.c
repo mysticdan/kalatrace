@@ -89,6 +89,7 @@ int main()
     storage->db = NULL;
     if (test_null_storage(storage) != 0) {
         free(storage);
+        storage = NULL;
         return 1;
     }
 
@@ -96,6 +97,8 @@ int main()
     int rc = storage_init(storage, "/tmp/test_close_storage.db");
     if (rc != SQLITE_OK) {
         printf("test_valid_connection: Failed to initialize storage (rc=%d)\n", rc);
+        free(storage);
+        storage = NULL;
         return rc;
     }
     test_valid_connection(storage);
@@ -103,6 +106,7 @@ int main()
     // Test 3: Close a close storage connection
     if (test_double_close(storage) != 0) {
         free(storage);
+        storage = NULL;
         return 1;
     }
 
@@ -110,10 +114,13 @@ int main()
     rc = storage_init(storage, "/tmp/test_close_storage.db");
     if (rc != SQLITE_OK) {
         printf("test_busy_connection_close: Failed to initialize storage (rc=%d)\n", rc);
+        free(storage);
+        storage = NULL;
         return rc;
     }
     if (test_busy_connection_close(storage) != 0) {
         free(storage);
+        storage = NULL;
         return 1;
     }
 
