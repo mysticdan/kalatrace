@@ -14,6 +14,7 @@ struct kalatrace_storage {
 int storage_init(struct kalatrace_storage *storage, const char *db_path);
 int storage_close(struct kalatrace_storage *storage);
 int storage_count_alerts(struct kalatrace_storage *storage, uint64_t *out_count);
+int storage_count_alerts_by_severity(struct kalatrace_storage *storage, const char *severity, uint64_t *out_count);
 int non_row_exec_sql(sqlite3 *db, const char *sql);
 
 #endif
