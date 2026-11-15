@@ -83,9 +83,13 @@ static int check_invalid_arguments(struct kalatrace_storage *storage)
 int main()
 {   
     // Create temporary database
-    char path[128];
+    char *path = malloc(128);
+    if (path == NULL) {
+        fprintf(stderr, "Failed to allocate memory for database path\n");
+        return 1;
+    }
     srand((unsigned int)time(NULL));
-    snprintf(path, sizeof(path), "/tmp/test-count-alerts-%08x.db", (unsigned int)rand());
+    snprintf(path, 128, "/tmp/test-count-alerts-%08x.db", (unsigned int)rand());
 
     // Storage initialization
     struct kalatrace_storage *storage = malloc(sizeof(struct kalatrace_storage));
@@ -98,14 +102,13 @@ int main()
     if (rc != SQLITE_OK) {
         fprintf(stderr, "Failed to initialize storage: %s\n", sqlite3_errstr(rc));
         free(storage);
+        free(path);
         return rc;
     }
-
     // Check if the database is empty
     if (check_empty_database(storage) != 0) {
         return 1;
     }
-
     // Create 3 alerts
     create_3_alerts(storage);
 
@@ -119,6 +122,7 @@ int main()
     if (rc != SQLITE_OK) {
         fprintf(stderr, "Failed to close storage: %s\n", sqlite3_errstr(rc));
         free(storage);
+        free(path);
         return rc;
     }
 
@@ -133,7 +137,7 @@ int main()
 
     // Clean up
     free(storage);
-    storage = NULL;
+    free(path);
 
     return 0;
 }
