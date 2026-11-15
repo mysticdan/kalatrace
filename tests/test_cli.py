@@ -10,7 +10,7 @@ import unittest
 
 CLI = Path(os.environ.get(
     "KALATRACE_CLI",
-    Path(__file__).resolve().parents[1] / "userspace/build/debug/kalatracectl",
+    Path(__file__).resolve().parents[1] / "build/tests/kalatracectl",
 )).resolve()
 
 

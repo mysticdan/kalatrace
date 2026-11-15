@@ -4,7 +4,7 @@
 CC := clang
 BUILD ?= release
 
-VALID_BUILDS := release debug asan ubsan
+VALID_BUILDS := release debug tests asan ubsan
 ifeq ($(filter $(BUILD),$(VALID_BUILDS)),)
 $(error Unsupported BUILD='$(BUILD)'; choose $(VALID_BUILDS))
 endif
@@ -36,7 +36,7 @@ ifeq ($(BUILD),release)
 CPPFLAGS += -DNDEBUG -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3
 CFLAGS += -O2 -flto=thin -ftrivial-auto-var-init=zero
 LDFLAGS += -flto=thin -fuse-ld=lld
-else ifeq ($(BUILD),debug)
+else ifneq ($(filter $(BUILD),debug tests),)
 CFLAGS += -O0 -g3 -fno-optimize-sibling-calls
 else ifeq ($(BUILD),asan)
 CFLAGS += -O1 -g3 -fsanitize=address,undefined \
@@ -60,7 +60,8 @@ SRCS := \
 	rules/alert.c \
 	output/jsonl_writer.c
 
-BUILD_DIR := build/$(BUILD)
+BUILD_ROOT := $(abspath ../build)
+BUILD_DIR := $(BUILD_ROOT)/$(BUILD)
 TARGET := $(BUILD_DIR)/kalatracectl
 OBJS := $(patsubst %.c,$(BUILD_DIR)/%.o,$(SRCS))
 DEPS := $(OBJS:.o=.d)
@@ -78,4 +79,4 @@ $(BUILD_DIR)/%.o: %.c
 -include $(DEPS)
 
 clean:
-	rm -rf build
+	$(RM) -r $(addprefix $(BUILD_ROOT)/,$(VALID_BUILDS))

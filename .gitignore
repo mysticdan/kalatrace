@@ -6,3 +6,4 @@
 /userspace/build/
 /userspace/kalatracectl
 */__pycache__/*
+/build/

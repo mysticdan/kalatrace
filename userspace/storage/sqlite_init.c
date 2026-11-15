@@ -58,7 +58,7 @@ static int enable_wal(sqlite3 *db)
     return rc;
 }
 
-static int non_row_exec_sql(sqlite3 *db, const char *sql)
+int non_row_exec_sql(sqlite3 *db, const char *sql)
 {
     char *error_message = NULL;
     int rc = sqlite3_exec(db, sql, NULL, NULL, &error_message);

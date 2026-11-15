@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <sqlite3.h>
+#include <stdint.h>
 
 struct kalatrace_storage {
     sqlite3 *db;
@@ -12,6 +13,7 @@ struct kalatrace_storage {
 
 int storage_init(struct kalatrace_storage *storage, const char *db_path);
 int storage_close(struct kalatrace_storage *storage);
-
+int storage_count_alerts(struct kalatrace_storage *storage, uint64_t *out_count);
+int non_row_exec_sql(sqlite3 *db, const char *sql);
 
 #endif
