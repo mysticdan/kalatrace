@@ -20,6 +20,10 @@ int storage_count_alerts(struct kalatrace_storage *storage, uint64_t *out_count)
     }
 
     *out_count = (uint64_t)sqlite3_column_int64(stmt, 0);
-    sqlite3_finalize(stmt);
+    rc = sqlite3_finalize(stmt);
+    if (rc != SQLITE_OK) {
+        return rc;
+    }
+
     return SQLITE_OK;
 }

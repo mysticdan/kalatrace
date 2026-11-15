@@ -28,7 +28,7 @@ static int check_empty_database(struct kalatrace_storage *storage) {
         return 0;
     } else {
         printf("\033[1;31mcheck_empty_database: Failed (count=%" PRIu64 ")\033[0m\n", count);
-        return rc;
+        return 1;
     }
 }
 
@@ -45,7 +45,7 @@ static int check_3_alerts(struct kalatrace_storage *storage) {
         return 0;
     } else {
         printf("\033[1;31mcheck_3_alerts: Failed (count=%" PRIu64 ")\033[0m\n", count);
-        return rc;
+        return 1;
     }
 }
 
@@ -57,7 +57,7 @@ static int check_close_storage(struct kalatrace_storage *storage) {
         return 0;
     } else {
         printf("\033[1;31mcheck_close_storage: Failed (rc=%d)\033[0m\n", rc);
-        return rc;
+        return 1;
     }   
 }
 
@@ -67,13 +67,13 @@ static int check_invalid_arguments(struct kalatrace_storage *storage)
     int rc = storage_count_alerts(NULL, &count);
     if (rc != SQLITE_MISUSE) {
         printf("\033[1;31mcheck_invalid_arguments: Failed (NULL storage, rc=%d)\033[0m\n", rc);
-        return rc;
+        return 1;
     }
 
     rc = storage_count_alerts(storage, NULL);
     if (rc != SQLITE_MISUSE) {
         printf("\033[1;31mcheck_invalid_arguments: Failed (NULL out_count, rc=%d)\033[0m\n", rc);
-        return rc;
+        return 1;
     }
 
     printf("\033[1;32mcheck_invalid_arguments: Passed\033[0m\n");
