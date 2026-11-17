@@ -74,6 +74,12 @@ int storage_insert_alert(struct kalatrace_storage *storage, struct kalatrace_ale
         return SQLITE_MISUSE;
     }
 
+    for (int i = 0; i < count_alerts; i++) {
+        if (alerts[i] == NULL) {
+            return SQLITE_MISUSE;
+        }
+    }
+
     const char *sql = 
         "INSERT INTO alerts (timestamp_ns, rule_id, severity, message, event_type, pid, ppid, uid, gid, comm, parent_comm, path, exe_path) "
         "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
@@ -91,17 +97,6 @@ int storage_insert_alert(struct kalatrace_storage *storage, struct kalatrace_ale
     }
 
     for (int i = 0; i < count_alerts; i++) {
-
-        if (alerts[i] == NULL) {
-            fprintf(stderr, "Alert at index %d is NULL\n", i);
-            rc = non_row_exec_sql(storage->db, "ROLLBACK;");
-            if (rc != SQLITE_OK) {
-                fprintf(stderr, "Failed to rollback transaction after NULL alert: %s (rc=%d)\n", sqlite3_errmsg(storage->db), rc);
-            }
-            sqlite3_finalize(stmt);
-            return SQLITE_MISUSE;
-        }
-
         struct kalatrace_alert *alert = alerts[i];
 
         if (alert->timestamp_ns > INT64_MAX) {
