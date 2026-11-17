@@ -91,17 +91,28 @@ int storage_insert_alert(struct kalatrace_storage *storage, struct kalatrace_ale
     }
 
     for (int i = 0; i < count_alerts; i++) {
+
+        if (alerts[i] == NULL) {
+            fprintf(stderr, "Alert at index %d is NULL\n", i);
+            rc = non_row_exec_sql(storage->db, "ROLLBACK;");
+            if (rc != SQLITE_OK) {
+                fprintf(stderr, "Failed to rollback transaction after NULL alert: %s (rc=%d)\n", sqlite3_errmsg(storage->db), rc);
+            }
+            sqlite3_finalize(stmt);
+            return SQLITE_MISUSE;
+        }
+
         struct kalatrace_alert *alert = alerts[i];
 
         if (alert->timestamp_ns > INT64_MAX) {
             fprintf(stderr, "Timestamp exceeds INT64_MAX: %" PRIu64 "\n", alert->timestamp_ns);
             rc = non_row_exec_sql(storage->db, "ROLLBACK;");
             if (rc != SQLITE_OK) {
-                fprintf(stderr, "Failed to rollback transaction after timestamp error: %s\n", sqlite3_errmsg(storage->db));
+                fprintf(stderr, "Failed to rollback transaction after timestamp error: %s (rc=%d)\n", sqlite3_errmsg(storage->db), rc);
             }
             rc = sqlite3_finalize(stmt);
             if (rc != SQLITE_OK) {
-                fprintf(stderr, "Failed to finalize statement after timestamp error: %s\n", sqlite3_errmsg(storage->db));
+                fprintf(stderr, "Failed to finalize statement after timestamp error: %s (rc=%d)\n", sqlite3_errmsg(storage->db), rc);
             }
             return SQLITE_TOOBIG;
         }
@@ -207,6 +218,10 @@ int storage_insert_alert(struct kalatrace_storage *storage, struct kalatrace_ale
     if (rc != SQLITE_OK) {
         fprintf(stderr, "Failed to commit transaction after inserting alerts (rc=%d): %s\n", rc, sqlite3_errmsg(storage->db));
         non_row_exec_sql(storage->db, "ROLLBACK;");
+        int finalize_rc = sqlite3_finalize(stmt);
+        if (finalize_rc != SQLITE_OK) {
+            fprintf(stderr, "Failed to finalize statement after commit error: %s (rc=%d)\n", sqlite3_errmsg(storage->db), finalize_rc);
+        }
         return rc;
     }
 
