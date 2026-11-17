@@ -41,5 +41,9 @@ $(BUILD_DIR)/test_insert_alert: test_insert_alert.c $(STORAGE_SRCS) $(HEADERS) M
 	@mkdir -p $(@D)
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(filter %.c,$^) $(LDFLAGS) $(LDLIBS) -o $@
 
+$(BUILD_DIR)/test_storage_cleanup: test_storage_cleanup.c $(STORAGE_SRCS) $(HEADERS) Makefile
+	@mkdir -p $(@D)
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(filter %.c,$^) $(LDFLAGS) $(LDLIBS) -o $@
+
 clean:
 	$(RM) $(TARGETS)

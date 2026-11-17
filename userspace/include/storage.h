@@ -6,11 +6,13 @@
 #include <string.h>
 #include <sqlite3.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include <inttypes.h>
 #include "alert.h"
 
 struct kalatrace_storage {
     sqlite3 *db;
+    bool unusable;
 };
 
 int storage_init(struct kalatrace_storage *storage, const char *db_path);

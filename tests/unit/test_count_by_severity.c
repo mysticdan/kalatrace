@@ -143,7 +143,7 @@ int main()
     }
     srand((unsigned int)time(NULL));
     snprintf(path, 128, "/tmp/test-count-alerts-by-severity-%08x.db", (unsigned int)rand());
-    struct kalatrace_storage *storage = malloc(sizeof(struct kalatrace_storage));
+    struct kalatrace_storage *storage = calloc(1, sizeof(struct kalatrace_storage));
     if (storage == NULL) {
         fprintf(stderr, "Failed to allocate memory for storage\n");
         return 1;

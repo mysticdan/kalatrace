@@ -12,5 +12,6 @@ int storage_close(struct kalatrace_storage *storage) {
     }
 
     storage->db = NULL;
+    storage->unusable = false;
     return SQLITE_OK;
 }

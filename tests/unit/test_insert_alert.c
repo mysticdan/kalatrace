@@ -366,7 +366,7 @@ int main()
         unlink(path);
         return 1;
     }
-    struct kalatrace_storage *storage = malloc(sizeof(struct kalatrace_storage));
+    struct kalatrace_storage *storage = calloc(1, sizeof(struct kalatrace_storage));
     if (storage == NULL) {
         fprintf(stderr, "Failed to allocate memory for storage\n");
         unlink(path);

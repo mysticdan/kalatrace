@@ -144,6 +144,11 @@ int storage_init(struct kalatrace_storage *storage, const char *db_path) {
         return SQLITE_ERROR;
     }
 
+    if (storage->db != NULL) {
+        return SQLITE_MISUSE;
+    }
+    storage->unusable = true;
+
     int rc = open_database(db_path, &storage->db);
     if (rc != SQLITE_OK) {
         return rc;
@@ -171,6 +176,7 @@ int storage_init(struct kalatrace_storage *storage, const char *db_path) {
         return rc;
     }
 
+    storage->unusable = false;
     printf("Database initialized successfully at %s.\n", db_path);
 
     return SQLITE_OK;

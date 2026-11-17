@@ -81,7 +81,7 @@ int main()
     if (test_null_storage(storage) != 0) {
         return 1;
     }
-    storage = malloc(sizeof(struct kalatrace_storage));
+    storage = calloc(1, sizeof(struct kalatrace_storage));
     if (storage == NULL) {
         fprintf(stderr, "Failed to allocate memory for storage\n");
         return 1;
