@@ -219,6 +219,109 @@ static int insert_many_alerts(struct kalatrace_storage *storage)
     return 0;
 }
 
+static int timestamp_exceeds_int64_max(struct kalatrace_storage *storage) 
+{
+    struct kalatrace_alert alert = {
+        .timestamp_ns = (uint64_t)INT64_MAX + 1,
+        .rule_id = "rule1",
+        .severity = "high",
+        .message = "Test alert",
+        .event_type = 1,
+        .pid = 1234,
+        .ppid = 5678,
+        .uid = 1000,
+        .gid = 1000,
+        .comm = "test_comm",
+        .parent_comm = "test_parent_comm",
+        .path = "/path/to/file",
+        .exe_path = "/path/to/exe"
+    };
+
+    struct kalatrace_alert *alerts[1] = { &alert };
+    int rc = storage_insert_alert(storage, alerts, 1);
+    if (rc != SQLITE_TOOBIG) {
+        printf("\033[1;31mtimestamp_exceeds_int64_max: Failed (rc=%d)\033[0m\n", rc);
+        return 1;
+    }
+
+    printf("\033[1;32mtimestamp_exceeds_int64_max: Passed (rc=%d)\033[0m\n", rc);
+    return 0;
+}
+
+static int check_second_failed_alert(struct kalatrace_storage *storage) 
+{
+    struct kalatrace_alert alert1 = {
+        .timestamp_ns = (uint64_t)time(NULL) * 1000000000,
+        .rule_id = "rule1",
+        .severity = "high",
+        .message = "Test alert 1",
+        .event_type = 1,
+        .pid = 1234,
+        .ppid = 5678,
+        .uid = 1000,
+        .gid = 1000,
+        .comm = "test_comm_1",
+        .parent_comm = "parent_comm_1",
+        .path = "/path/to/file1",
+        .exe_path = "/path/to/exe1"
+    };
+
+    struct kalatrace_alert alert2 = {
+        .timestamp_ns = (uint64_t)INT64_MAX + 1,
+        .rule_id = "rule2",
+        .severity = "medium",
+        .message = "Test alert 2",
+        .event_type = 2,
+        .pid = 2345,
+        .ppid = 6789,
+        .uid = 1001,
+        .gid = 1001,
+        .comm = "test_comm_2",
+        .parent_comm = "parent_comm_2",
+        .path = "/path/to/file2",
+        .exe_path = "/path/to/exe2"
+    };
+
+    struct kalatrace_alert *alerts[2] = { &alert1, &alert2 };
+    int rc = storage_insert_alert(storage, alerts, 2);
+    if (rc == SQLITE_OK) {
+        printf("\033[1;31mcheck_second_failed_alert: Failed (rc=%d)\033[0m\n", rc);
+        return 1;
+    }
+    
+    printf("\033[1;32mcheck_second_failed_alert: Passed (rc=%d)\033[0m\n", rc);
+    return 0;
+}
+
+static int check_null_alert_in_array(struct kalatrace_storage *storage) 
+{
+    struct kalatrace_alert alert1 = {
+        .timestamp_ns = (uint64_t)time(NULL) * 1000000000,
+        .rule_id = "rule1",
+        .severity = "high",
+        .message = "Test alert 1",
+        .event_type = 1,
+        .pid = 1234,
+        .ppid = 5678,
+        .uid = 1000,
+        .gid = 1000,
+        .comm = "test_comm_1",
+        .parent_comm = "parent_comm_1",
+        .path = "/path/to/file1",
+        .exe_path = "/path/to/exe1"
+    };
+
+    struct kalatrace_alert *alerts[2] = { &alert1, NULL };
+    int rc = storage_insert_alert(storage, alerts, 2);
+    if (rc == SQLITE_OK) {
+        printf("\033[1;31mcheck_null_alert_in_array: Failed (rc=%d)\033[0m\n", rc);
+        return 1;
+    }
+    
+    printf("\033[1;32mcheck_null_alert_in_array: Passed (rc=%d)\033[0m\n", rc);
+    return 0;
+}
+
 static int check_invalid_arguments(struct kalatrace_storage *storage) 
 {
     struct kalatrace_alert alert;
@@ -303,6 +406,94 @@ int main()
         unlink(path);
         return 1;
     }
+
+    // Check timestamp exceeds INT64_MAX
+    if (timestamp_exceeds_int64_max(storage) != 0) {
+        fprintf(stderr, "Failed to check timestamp exceeds INT64_MAX\n");
+        rc = storage_close(storage);
+        if (rc != SQLITE_OK) {
+            fprintf(stderr, "Failed to close storage: %s\n", sqlite3_errstr(rc));
+        }
+        free(storage);
+        unlink(path);
+        return 1;
+    }
+
+    // Check null alert in array
+    if (check_null_alert_in_array(storage) != 0) {
+        fprintf(stderr, "Failed to check null alert in array\n");
+        rc = storage_close(storage);
+        if (rc != SQLITE_OK) {
+            fprintf(stderr, "Failed to close storage: %s\n", sqlite3_errstr(rc));
+        }
+        free(storage);
+        unlink(path);
+        return 1;
+    }
+
+    // Check second failed alert
+    if (check_second_failed_alert(storage) != 0) {
+        fprintf(stderr, "Failed to check second failed alert\n");
+        rc = storage_close(storage);
+        if (rc != SQLITE_OK) {
+            fprintf(stderr, "Failed to close storage: %s\n", sqlite3_errstr(rc));
+        }
+        free(storage);
+        unlink(path);
+        return 1;
+    }
+
+    // Check consistency before and after close storage
+    uint64_t count_before_close = 0;
+    rc = storage_count_alerts(storage, &count_before_close);
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "Failed to count alerts before close: %s\n", sqlite3_errstr(rc));
+        rc = storage_close(storage);
+        if (rc != SQLITE_OK) {
+            fprintf(stderr, "Failed to close storage: %s\n", sqlite3_errstr(rc));
+        }
+        free(storage);
+        unlink(path);
+        return 1;
+    }
+
+    rc = storage_close(storage);
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "Failed to close storage: %s\n", sqlite3_errstr(rc));
+        free(storage);
+        unlink(path);
+        return rc;
+    }
+
+    rc = storage_init(storage, path);
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "Failed to re-initialize storage: %s\n", sqlite3_errstr(rc));
+        free(storage);
+        unlink(path);
+        return rc;
+    }
+
+    uint64_t count_after_close = 0;
+    rc = storage_count_alerts(storage, &count_after_close);
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "Failed to count alerts after close: %s\n", sqlite3_errstr(rc));
+        free(storage);
+        unlink(path);
+        return 1;
+    }
+
+    if (count_before_close != count_after_close) {
+        printf("\033[1;31mcheck_consistency_before_after_close: Failed (before=%" PRIu64 ", after=%" PRIu64 ")\033[0m\n", count_before_close, count_after_close);
+        rc = storage_close(storage);
+        if (rc != SQLITE_OK) {
+            fprintf(stderr, "Failed to close storage: %s\n", sqlite3_errstr(rc));
+        }
+        free(storage);
+        unlink(path);
+        return 1;
+    }
+    
+    printf("\033[1;32mcheck_consistency_before_after_close: Passed (count=%" PRIu64 ")\033[0m\n", count_after_close);
 
     // check invalid arguments
     rc = storage_close(storage);
