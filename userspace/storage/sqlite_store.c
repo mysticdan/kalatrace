@@ -101,13 +101,19 @@ int storage_insert_alert(struct kalatrace_storage *storage, struct kalatrace_ale
 
         if (alert->timestamp_ns > INT64_MAX) {
             fprintf(stderr, "Timestamp exceeds INT64_MAX: %" PRIu64 "\n", alert->timestamp_ns);
-            rc = non_row_exec_sql(storage->db, "ROLLBACK;");
-            if (rc != SQLITE_OK) {
-                fprintf(stderr, "Failed to rollback transaction after timestamp error: %s (rc=%d)\n", sqlite3_errmsg(storage->db), rc);
+            
+            int finalize_rc = sqlite3_finalize(stmt);
+            if (finalize_rc != SQLITE_OK) {
+                fprintf(stderr, "Failed to finalize statement after timestamp error: %s (rc=%d)\n", sqlite3_errmsg(storage->db), finalize_rc);
             }
-            rc = sqlite3_finalize(stmt);
-            if (rc != SQLITE_OK) {
-                fprintf(stderr, "Failed to finalize statement after timestamp error: %s (rc=%d)\n", sqlite3_errmsg(storage->db), rc);
+
+            int rollback_rc = storage_rollback_transaction(storage);
+            if (rollback_rc != SQLITE_OK) {
+                fprintf(stderr, "Failed to rollback transaction after timestamp error: %s (rc=%d)\n", sqlite3_errmsg(storage->db), rollback_rc);
+                int close_rc = storage_close(storage);
+                if (close_rc != SQLITE_OK) {
+                    fprintf(stderr, "Failed to close storage after rollback error: %s (rc=%d)\n", sqlite3_errmsg(storage->db), close_rc);
+                }
             }
             return SQLITE_TOOBIG;
         }
@@ -209,21 +215,31 @@ int storage_insert_alert(struct kalatrace_storage *storage, struct kalatrace_ale
         }
     }
 
-    rc = non_row_exec_sql(storage->db, "COMMIT;");
+    rc = sqlite3_finalize(stmt);
     if (rc != SQLITE_OK) {
-        fprintf(stderr, "Failed to commit transaction after inserting alerts (rc=%d): %s\n", rc, sqlite3_errmsg(storage->db));
-        non_row_exec_sql(storage->db, "ROLLBACK;");
-        int finalize_rc = sqlite3_finalize(stmt);
-        if (finalize_rc != SQLITE_OK) {
-            fprintf(stderr, "Failed to finalize statement after commit error: %s (rc=%d)\n", sqlite3_errmsg(storage->db), finalize_rc);
+        fprintf(stderr, "Failed to finalize statement after inserting alerts: %s (rc=%d)\n", sqlite3_errmsg(storage->db), rc);
+        int rollback_rc = storage_rollback_transaction(storage);
+        if (rollback_rc != SQLITE_OK) {
+            fprintf(stderr, "Failed to rollback transaction after finalize error: %s (rc=%d)\n", sqlite3_errmsg(storage->db), rollback_rc);
+            int close_rc = storage_close(storage);
+            if (close_rc != SQLITE_OK) {
+                fprintf(stderr, "Failed to close storage after rollback error: %s (rc=%d)\n", sqlite3_errmsg(storage->db), close_rc);
+            }
         }
         return rc;
     }
 
-    rc = sqlite3_finalize(stmt);
+    rc = non_row_exec_sql(storage->db, "COMMIT;");
     if (rc != SQLITE_OK) {
-        fprintf(stderr, "Failed to finalize statement after inserting alerts (rc=%d): %s\n", rc, sqlite3_errmsg(storage->db));
-        non_row_exec_sql(storage->db, "ROLLBACK;");
+        fprintf(stderr, "Failed to commit transaction after inserting alerts: %s (rc=%d)\n", sqlite3_errmsg(storage->db), rc);
+        int rollback_rc = storage_rollback_transaction(storage);
+        if (rollback_rc != SQLITE_OK) {
+            fprintf(stderr, "Failed to rollback transaction after commit error: %s (rc=%d)\n", sqlite3_errmsg(storage->db), rollback_rc);
+            int close_rc = storage_close(storage);
+            if (close_rc != SQLITE_OK) {
+                fprintf(stderr, "Failed to close storage after rollback error: %s (rc=%d)\n", sqlite3_errmsg(storage->db), close_rc);
+            }
+        }
         return rc;
     }
 
@@ -231,10 +247,17 @@ int storage_insert_alert(struct kalatrace_storage *storage, struct kalatrace_ale
 
     rollback:
         fprintf(stderr, "Error in storage_insert_alert: %s (rc=%d)\n", sqlite3_errmsg(storage->db), rc);
-        non_row_exec_sql(storage->db, "ROLLBACK;");
         int finalize_rc = sqlite3_finalize(stmt);
         if (finalize_rc != SQLITE_OK) {
             fprintf(stderr, "Failed to finalize statement after rollback: %s (rc=%d)\n", sqlite3_errmsg(storage->db), finalize_rc);
+        }
+        int rollback_rc = storage_rollback_transaction(storage);
+        if (rollback_rc != SQLITE_OK) {
+            fprintf(stderr, "Failed to rollback transaction after error: %s (rc=%d)\n", sqlite3_errmsg(storage->db), rollback_rc);
+            int close_rc = storage_close(storage);
+            if (close_rc != SQLITE_OK) {
+                fprintf(stderr, "Failed to close storage after rollback error: %s (rc=%d)\n", sqlite3_errmsg(storage->db), close_rc);
+            }
         }
         return rc;
 }
