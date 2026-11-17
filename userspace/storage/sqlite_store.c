@@ -83,7 +83,7 @@ int storage_insert_alert(struct kalatrace_storage *storage, struct kalatrace_ale
     if (rc != SQLITE_OK) {
         return rc;
     }
-    
+
     rc = non_row_exec_sql(storage->db, "BEGIN IMMEDIATE;");
     if (rc != SQLITE_OK) {
         sqlite3_finalize(stmt);
@@ -108,66 +108,79 @@ int storage_insert_alert(struct kalatrace_storage *storage, struct kalatrace_ale
 
         rc = sqlite3_bind_int64(stmt, 1, alert->timestamp_ns);
         if (rc != SQLITE_OK) {
+            fprintf(stderr, "Failed to bind timestamp for alert: %" PRIu64 " (rc=%d): %s\n", alert->timestamp_ns, rc, sqlite3_errmsg(storage->db));
             goto rollback;
         }
     
         rc = sqlite3_bind_text(stmt, 2, alert->rule_id, -1, SQLITE_STATIC);
         if (rc != SQLITE_OK) {
+            fprintf(stderr, "Failed to bind rule_id for alert: %s (rc=%d): %s\n", alert->rule_id, rc, sqlite3_errmsg(storage->db));
             goto rollback;
         }
     
         rc = sqlite3_bind_text(stmt, 3, alert->severity, -1, SQLITE_STATIC);
         if (rc != SQLITE_OK) {
+            fprintf(stderr, "Failed to bind severity for alert: %s (rc=%d): %s\n", alert->severity, rc, sqlite3_errmsg(storage->db));
             goto rollback;
         }
     
         rc = sqlite3_bind_text(stmt, 4, alert->message, -1, SQLITE_STATIC);
         if (rc != SQLITE_OK) {
+            fprintf(stderr, "Failed to bind message for alert: %s (rc=%d): %s\n", alert->message, rc, sqlite3_errmsg(storage->db));
             goto rollback;
         }
     
         rc = sqlite3_bind_int64(stmt, 5, alert->event_type);
         if (rc != SQLITE_OK) {
+            fprintf(stderr, "Failed to bind event_type for alert: %u (rc=%d): %s\n", alert->event_type, rc, sqlite3_errmsg(storage->db));
             goto rollback;
         }
     
         rc = sqlite3_bind_int64(stmt, 6, alert->pid);
         if (rc != SQLITE_OK) {
+            fprintf(stderr, "Failed to bind pid for alert: %u (rc=%d): %s\n", alert->pid, rc, sqlite3_errmsg(storage->db));
             goto rollback;
         }
     
         rc = sqlite3_bind_int64(stmt, 7, alert->ppid);
         if (rc != SQLITE_OK) {
+            fprintf(stderr, "Failed to bind ppid for alert: %u (rc=%d): %s\n", alert->ppid, rc, sqlite3_errmsg(storage->db));
             goto rollback;
         }
     
         rc = sqlite3_bind_int64(stmt, 8, alert->uid);
         if (rc != SQLITE_OK) {
+            fprintf(stderr, "Failed to bind uid for alert: %u (rc=%d): %s\n", alert->uid, rc, sqlite3_errmsg(storage->db));
             goto rollback;
         }
     
         rc = sqlite3_bind_int64(stmt, 9, alert->gid);
         if (rc != SQLITE_OK) {
+            fprintf(stderr, "Failed to bind gid for alert: %u (rc=%d): %s\n", alert->gid, rc, sqlite3_errmsg(storage->db));
             goto rollback;
         }
     
         rc = sqlite3_bind_text(stmt, 10, alert->comm, -1, SQLITE_STATIC);
         if (rc != SQLITE_OK) {
+            fprintf(stderr, "Failed to bind comm for alert: %s (rc=%d): %s\n", alert->comm, rc, sqlite3_errmsg(storage->db));
             goto rollback;
         }
     
         rc = sqlite3_bind_text(stmt, 11, alert->parent_comm, -1, SQLITE_STATIC);
         if (rc != SQLITE_OK) {
+            fprintf(stderr, "Failed to bind parent_comm for alert: %s (rc=%d): %s\n", alert->parent_comm, rc, sqlite3_errmsg(storage->db));
             goto rollback;
         }
     
         rc = sqlite3_bind_text(stmt, 12, alert->path, -1, SQLITE_STATIC);
         if (rc != SQLITE_OK) {
+            fprintf(stderr, "Failed to bind path for alert: %s (rc=%d): %s\n", alert->path, rc, sqlite3_errmsg(storage->db));
             goto rollback;
         }
     
         rc = sqlite3_bind_text(stmt, 13, alert->exe_path, -1, SQLITE_STATIC);
         if (rc != SQLITE_OK) {
+            fprintf(stderr, "Failed to bind exe_path for alert: %s (rc=%d): %s\n", alert->exe_path, rc, sqlite3_errmsg(storage->db));
             goto rollback;
         }
 
@@ -193,13 +206,14 @@ int storage_insert_alert(struct kalatrace_storage *storage, struct kalatrace_ale
     rc = non_row_exec_sql(storage->db, "COMMIT;");
     if (rc != SQLITE_OK) {
         fprintf(stderr, "Failed to commit transaction after inserting alerts (rc=%d): %s\n", rc, sqlite3_errmsg(storage->db));
-        rc = non_row_exec_sql(storage->db, "ROLLBACK;");
+        non_row_exec_sql(storage->db, "ROLLBACK;");
         return rc;
     }
 
     rc = sqlite3_finalize(stmt);
     if (rc != SQLITE_OK) {
         fprintf(stderr, "Failed to finalize statement after inserting alerts (rc=%d): %s\n", rc, sqlite3_errmsg(storage->db));
+        non_row_exec_sql(storage->db, "ROLLBACK;");
         return rc;
     }
 
@@ -208,9 +222,9 @@ int storage_insert_alert(struct kalatrace_storage *storage, struct kalatrace_ale
     rollback:
         fprintf(stderr, "Error in storage_insert_alert: %s (rc=%d)\n", sqlite3_errmsg(storage->db), rc);
         non_row_exec_sql(storage->db, "ROLLBACK;");
-        rc = sqlite3_finalize(stmt);
-        if (rc != SQLITE_OK) {
-            fprintf(stderr, "Failed to finalize statement after rollback: %s\n", sqlite3_errmsg(storage->db));
+        int finalize_rc = sqlite3_finalize(stmt);
+        if (finalize_rc != SQLITE_OK) {
+            fprintf(stderr, "Failed to finalize statement after rollback: %s (rc=%d)\n", sqlite3_errmsg(storage->db), finalize_rc);
         }
         return rc;
 }
