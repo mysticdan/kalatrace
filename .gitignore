@@ -7,3 +7,4 @@
 /userspace/kalatracectl
 */__pycache__/*
 /build/
+tests/unit/test_storage_cleanup.c

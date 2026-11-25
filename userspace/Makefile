@@ -21,7 +21,7 @@ CFLAGS := -std=gnu23 -Wall -Wextra -Wpedantic \
 
 # Full RELRO, immediate symbol binding, non-executable stack and PIE
 LDFLAGS := -pie -Wl,-z,relro,-z,now,-z,noexecstack -pthread
-LDLIBS := -lcjson
+LDLIBS := -lcjson -lsqlite3
 
 # Hardware-assisted branch protection depends on target architecture
 TARGET_TRIPLE := $(shell $(CC) -dumpmachine)
@@ -58,7 +58,11 @@ SRCS := \
 	rules/parser.c \
 	rules/matcher.c \
 	rules/alert.c \
-	output/jsonl_writer.c
+	output/jsonl_writer.c \
+	storage/sqlite_init.c \
+	storage/sqlite_close.c \
+	storage/sqlite_rollback.c \
+	storage/sqlite_store.c
 
 BUILD_ROOT := $(abspath ../build)
 BUILD_DIR := $(BUILD_ROOT)/$(BUILD)
