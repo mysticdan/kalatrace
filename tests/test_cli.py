@@ -41,10 +41,13 @@ class CliRegressionTests(unittest.TestCase):
     def invoke(self, content, command="test-event"):
         input_path = self.cwd / "event.json"
         input_path.write_bytes(content)
-        return subprocess.run(
+        result = subprocess.run(
             [str(CLI), command, str(input_path)], cwd=self.cwd,
             capture_output=True, text=True, check=False,
         )
+        self.assertGreaterEqual(result.returncode, 0, result.stderr)
+        self.assertNotEqual(result.returncode, 86, result.stderr)
+        return result
 
     def test_output_escapes_strings_and_preserves_u64(self):
         tricky_path = '/tmp/"quote"\\backslash\nnewline\t\x01control'

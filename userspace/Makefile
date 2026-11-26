@@ -4,7 +4,7 @@
 CC := clang
 BUILD ?= release
 
-VALID_BUILDS := release debug tests asan ubsan
+VALID_BUILDS := release debug tests asan ubsan tsan
 ifeq ($(filter $(BUILD),$(VALID_BUILDS)),)
 $(error Unsupported BUILD='$(BUILD)'; choose $(VALID_BUILDS))
 endif
@@ -42,6 +42,10 @@ else ifeq ($(BUILD),asan)
 CFLAGS += -O1 -g3 -fsanitize=address,undefined \
           -fno-sanitize-recover=all -fno-optimize-sibling-calls
 LDFLAGS += -fsanitize=address,undefined
+else ifeq ($(BUILD),tsan)
+CFLAGS += -O1 -g3 -fsanitize=thread,undefined \
+          -fno-sanitize-recover=all -fno-optimize-sibling-calls
+LDFLAGS += -fsanitize=thread,undefined
 else ifeq ($(BUILD),ubsan)
 CFLAGS += -O1 -g3 -fsanitize=undefined -fno-sanitize-recover=all
 LDFLAGS += -fsanitize=undefined
