@@ -172,13 +172,24 @@ static int check_wrong_arguments(char const *const binary, char *const argv[])
 
 int main()
 {
-    char const *const binary_path = "./build/tests/kalatracectl";
-    char *const match_event[] = { "kalatracectl", "test-event-db", "./tests/fixtures/exec_nginx_shell.json", "/tmp/test-event-db", NULL };
-    char *const no_match_event[] = { "kalatracectl", "test-event-db", "./tests/fixtures/no_match_event.json", "/tmp/test-event-db", NULL };
-    char *const invalid_json[] = { "kalatracectl", "test-event-db", "./tests/fixtures/invalid_json_event.json", "/tmp/test-event-db", NULL };
-    char *const timestamp_int64_exceeded[] = { "kalatracectl", "test-event-db", "./tests/fixtures/timestamp_exceeded_event.json", "/tmp/test-event-db", NULL };
-    char *const wrong_arguments[] = { "kalatracectl", "test-event-db", "./tests/fixtures/exec_nginx_shell.json", NULL };
+    char path[] = "/tmp/test-event-db-XXXXXX";
+    int fd = mkstemp(path);
+    if (fd == -1) {
+        perror("mkstemp");
+        return 1;
+    }
+    if (close(fd) != 0) {
+        perror("close");
+        unlink(path);
+        return 1;
+    }
 
+    char const *const binary_path = "../../build/tests/kalatracectl";
+    char *const match_event[] = { "kalatracectl", "test-event-db", "../fixtures/exec_nginx_shell.json", path, NULL };
+    char *const no_match_event[] = { "kalatracectl", "test-event-db", "../fixtures/no_match_event.json", path, NULL };
+    char *const invalid_json[] = { "kalatracectl", "test-event-db", "../fixtures/invalid_json_event.json", path, NULL };
+    char *const timestamp_int64_exceeded[] = { "kalatracectl", "test-event-db", "../fixtures/timestamp_exceeded_event.json", path, NULL };
+    char *const wrong_arguments[] = { "kalatracectl", "test-event-db", "../fixtures/exec_nginx_shell.json", NULL };
 
     if(check_match_event(binary_path, match_event) != 0) {
         return 1;
@@ -203,6 +214,8 @@ int main()
     if(check_wrong_arguments(binary_path, wrong_arguments) != 0) {
         return 1;
     }
+
+    unlink(path);
 
     return 0;
 }
