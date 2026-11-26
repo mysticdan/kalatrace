@@ -106,7 +106,7 @@ int storage_insert_alert(struct kalatrace_storage *storage, struct kalatrace_ale
             goto rollback;
         }
 
-        rc = sqlite3_bind_int64(stmt, 1, alert->timestamp_ns);
+        rc = sqlite3_bind_int64(stmt, 1, (sqlite3_int64)alert->timestamp_ns);
         if (rc != SQLITE_OK) {
             fprintf(stderr, "Failed to bind timestamp for alert: %" PRIu64 " (rc=%d): %s\n", alert->timestamp_ns, rc, sqlite3_errmsg(storage->db));
             goto rollback;
