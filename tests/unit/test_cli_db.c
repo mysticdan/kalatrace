@@ -123,6 +123,13 @@ static int check_second_time_match_event(char const *const binary, char *const a
         return 1;
     }
 
+    rc = storage_close(storage);
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "Failed to close storage\n");
+        free(storage);
+        return rc;
+    }
+    free(storage);
     printf("\033[1;32mcheck_second_time_match_event: Passed\033[0m\n");
     return 0;
 }
@@ -165,12 +172,12 @@ static int check_wrong_arguments(char const *const binary, char *const argv[])
 
 int main()
 {
-    char const *const binary_path = "/home/dani/kalatrace/build/tests/kalatracectl";
-    char *const match_event[] = { "kalatracectl", "test-event-db", "/home/dani/kalatrace/tests/fixtures/exec_nginx_shell.json", "/tmp/test-event-db", NULL };
-    char *const no_match_event[] = { "kalatracectl", "test-event-db", "/home/dani/kalatrace/tests/fixtures/no_match_event.json", "/tmp/test-event-db", NULL };
-    char *const invalid_json[] = { "kalatracectl", "test-event-db", "/home/dani/kalatrace/tests/fixtures/invalid_json_event.json", "/tmp/test-event-db", NULL };
-    char *const timestamp_int64_exceeded[] = { "kalatracectl", "test-event-db", "/home/dani/kalatrace/tests/fixtures/timestamp_exceeded_event.json", "/tmp/test-event-db", NULL };
-    char *const wrong_arguments[] = { "kalatracectl", "test-event-db", "/home/dani/kalatrace/tests/fixtures/exec_nginx_shell.json", NULL };
+    char const *const binary_path = "./build/tests/kalatracectl";
+    char *const match_event[] = { "kalatracectl", "test-event-db", "./tests/fixtures/exec_nginx_shell.json", "/tmp/test-event-db", NULL };
+    char *const no_match_event[] = { "kalatracectl", "test-event-db", "./tests/fixtures/no_match_event.json", "/tmp/test-event-db", NULL };
+    char *const invalid_json[] = { "kalatracectl", "test-event-db", "./tests/fixtures/invalid_json_event.json", "/tmp/test-event-db", NULL };
+    char *const timestamp_int64_exceeded[] = { "kalatracectl", "test-event-db", "./tests/fixtures/timestamp_exceeded_event.json", "/tmp/test-event-db", NULL };
+    char *const wrong_arguments[] = { "kalatracectl", "test-event-db", "./tests/fixtures/exec_nginx_shell.json", NULL };
 
 
     if(check_match_event(binary_path, match_event) != 0) {

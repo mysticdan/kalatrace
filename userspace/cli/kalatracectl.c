@@ -49,9 +49,10 @@ static int test_event(const char *json_path)
         return match_result;
     }
 
-    if (kalatrace_create_alert_from_event(&event, &alert) != 0) {
+    rc = kalatrace_create_alert_from_event(&event, &alert);
+    if (rc != 0) {
         fprintf(stderr, "Failed to create alert from event: %s\n", json_path);
-        return match_result;
+        return rc;
     }
 
     rc = kalatrace_write_alert_jsonl("alerts.jsonl", &alert);
@@ -111,12 +112,14 @@ static int test_event_db(const char *json_path, const char *db_path)
     rc = storage_insert_alert(storage, alerts, 1);
     if (rc != SQLITE_OK) {
         fprintf(stderr, "Failed to write alert to database: %s\n", db_path);
+        int close_rc = storage_close(storage);
+        if (close_rc != SQLITE_OK) {
+            fprintf(stderr, "Failed to close storage\n");
+        }
         free(storage);
         return rc;
     }
 
-    printf("Alert generated and written to database\n");
-    
     rc = storage_close(storage);
     if (rc != SQLITE_OK) {
         fprintf(stderr, "Failed to close storage\n");
@@ -124,7 +127,10 @@ static int test_event_db(const char *json_path, const char *db_path)
         return rc;
     }
     free(storage);
-    return 0;
+    
+    printf("Alert generated and written to database\n");
+    
+    return KALATRACE_MATCH_ALERT;
 }
 
 int main(int argc, char *argv[])
