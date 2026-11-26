@@ -184,7 +184,8 @@ int main()
         return 1;
     }
 
-    char const *const binary_path = "../../build/tests/kalatracectl";
+    char const *const cli = getenv("KALATRACE_CLI");
+    char const *const binary_path = cli && *cli ? cli : "../../build/tests/kalatracectl";
     char *const match_event[] = { "kalatracectl", "test-event-db", "../fixtures/exec_nginx_shell.json", path, NULL };
     char *const no_match_event[] = { "kalatracectl", "test-event-db", "../fixtures/no_match_event.json", path, NULL };
     char *const invalid_json[] = { "kalatracectl", "test-event-db", "../fixtures/invalid_json_event.json", path, NULL };
