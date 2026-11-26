@@ -192,26 +192,32 @@ int main()
     char *const wrong_arguments[] = { "kalatracectl", "test-event-db", "../fixtures/exec_nginx_shell.json", NULL };
 
     if(check_match_event(binary_path, match_event) != 0) {
+        unlink(path);
         return 1;
     }
 
     if(check_no_match_event(binary_path, no_match_event) != 0) {
+        unlink(path);
         return 1;
     }
 
     if(check_second_time_match_event(binary_path, match_event) != 0) {
+        unlink(path);
         return 1;
     }
 
     if(check_invalid_json(binary_path, invalid_json) != 0) {
+        unlink(path);
         return 1;
     }
 
     if(check_timestamp_int64_exceeded(binary_path, timestamp_int64_exceeded) != 0) {
+        unlink(path);
         return 1;
     }
 
     if(check_wrong_arguments(binary_path, wrong_arguments) != 0) {
+        unlink(path);
         return 1;
     }
 
